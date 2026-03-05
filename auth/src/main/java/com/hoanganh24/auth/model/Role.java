@@ -1,4 +1,4 @@
 package com.hoanganh24.auth.model;
 
-public class Role {
+public enum Role {
 }

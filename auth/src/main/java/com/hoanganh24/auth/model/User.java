@@ -1,5 +1,6 @@
 package com.hoanganh24.auth.model;
 
+import com.hoanganh24.common.model.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
