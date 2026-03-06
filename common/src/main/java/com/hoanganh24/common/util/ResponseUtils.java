@@ -19,6 +19,11 @@ public class ResponseUtils {
         return ResponseEntity.ok(BaseResponse.ok(data, message));
     }
 
+    public static <T> ResponseEntity<BaseResponse<T>> created(T data) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(BaseResponse.of(HttpStatus.CREATED.value(), "Success", data));
+    }
+
     public static <T> ResponseEntity<BaseResponse<T>> badRequest(String message) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(BaseResponse.badRequest(message));
