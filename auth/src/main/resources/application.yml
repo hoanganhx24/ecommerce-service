@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: auth
+
+server:
+  port: 8081
+
+#JWT
+jwt:
+  signerKey: ${JWT_SIGNER_KEY}
+  valid-duration: 3600
+  refeshable-duration: 172800

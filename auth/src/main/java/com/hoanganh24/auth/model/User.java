@@ -1,5 +1,6 @@
 package com.hoanganh24.auth.model;
 
+import com.hoanganh24.auth.enums.Role;
 import com.hoanganh24.common.model.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,7 +20,9 @@ public class User extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
-    String username;
     String password;
     String email;
+    Role role;
+
+    Boolean enabled;
 }
