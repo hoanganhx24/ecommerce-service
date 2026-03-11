@@ -14,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Builder
 @Entity
 public class User extends BaseEntity {
     @Id
@@ -24,5 +25,5 @@ public class User extends BaseEntity {
     String email;
     Role role;
 
-    Boolean enabled;
+    Boolean isActive;
 }

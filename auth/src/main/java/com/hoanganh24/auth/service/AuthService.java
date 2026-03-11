@@ -1,5 +1,7 @@
 package com.hoanganh24.auth.service;
 
+import com.hoanganh24.auth.dto.request.SignupRequest;
+
 public interface AuthService {
-    void register(String email, String password);
+    void signup(SignupRequest signupRequest);
 }
