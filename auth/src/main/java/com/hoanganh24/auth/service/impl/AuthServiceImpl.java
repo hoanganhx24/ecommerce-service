@@ -1,6 +1,7 @@
 package com.hoanganh24.auth.service.impl;
 
 import com.hoanganh24.auth.dto.request.SignupRequest;
+import com.hoanganh24.auth.dto.response.SignupResponse;
 import com.hoanganh24.auth.enums.Role;
 import com.hoanganh24.auth.model.User;
 import com.hoanganh24.auth.repository.UserRepository;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @RequiredArgsConstructor
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -22,24 +25,44 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void signup(SignupRequest signupRequest) {
-        User user = userRepository.findByEmail(signupRequest.getEmail()).orElse(null);
-        if (user != null) {
-            if (user.getIsActive()){
+    public SignupResponse signup(SignupRequest signupRequest) {
+
+        Optional<User> userOpt = userRepository.findByEmail(signupRequest.getEmail());
+
+        if (userOpt.isPresent()) {
+
+            User user = userOpt.get();
+
+            if (user.getIsActive()) {
                 throw new ResourceExistedException("User is already active");
             }
-            else {
-                otpService.sendOtp(signupRequest.getEmail());
-                return;
-            }
+
+            // user tồn tại nhưng chưa verify
+            user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
+            userRepository.save(user);
+
+        } else {
+
+            // tạo user mới
+            User newUser = User.builder()
+                    .email(signupRequest.getEmail())
+                    .role(Role.USER)
+                    .isActive(false)
+                    .password(passwordEncoder.encode(signupRequest.getPassword()))
+                    .build();
+
+            userRepository.save(newUser);
         }
-        String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
-        User newUser = User.builder()
+
+        try {
+            // gửi OTP
+            otpService.sendOtp(signupRequest.getEmail());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send OTP");
+        }
+        return SignupResponse.builder()
                 .email(signupRequest.getEmail())
-                .role(Role.USER)
-                .isActive(false)
-                .password(encodedPassword)
+                .otpSent(true)
                 .build();
-        userRepository.save(newUser);
     }
 }

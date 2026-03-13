@@ -1,6 +1,8 @@
 package com.hoanganh24.auth.service;
 
+import com.hoanganh24.auth.dto.request.VerifyOtpRequest;
+
 public interface OtpService {
-    boolean sendOtp(String email);
-    boolean verifyOtp(String email, String otp);
+    void sendOtp(String email);
+    boolean verifyOtp(VerifyOtpRequest verifyOtpRequest);
 }

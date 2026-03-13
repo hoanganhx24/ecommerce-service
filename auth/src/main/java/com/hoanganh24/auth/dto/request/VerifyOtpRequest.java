@@ -1,5 +1,6 @@
-package com.hoanganh24.auth.dto.response;
+package com.hoanganh24.auth.dto.request;
 
+import com.hoanganh24.auth.enums.OtpType;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -9,8 +10,8 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class RegisterResponse {
-    String accessToken;
-    String refreshToken;
-    boolean authenticated;
+public class VerifyOtpRequest {
+    String email;
+    String otp;
+    OtpType type;
 }

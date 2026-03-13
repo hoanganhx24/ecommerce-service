@@ -1,8 +1,8 @@
 package com.hoanganh24.auth.controller;
 
 import com.hoanganh24.auth.dto.request.SignupRequest;
+import com.hoanganh24.auth.dto.response.SignupResponse;
 import com.hoanganh24.auth.service.AuthService;
-import com.hoanganh24.auth.service.OtpService;
 import com.hoanganh24.common.dto.response.BaseResponse;
 import com.hoanganh24.common.util.ResponseUtils;
 import lombok.RequiredArgsConstructor;
@@ -13,16 +13,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/auth")
+@RequestMapping
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
-    private final OtpService otpService;
 
-    @PostMapping
-    public ResponseEntity<BaseResponse<Void>> signup(@RequestBody SignupRequest signupRequest) {
-        authService.signup(signupRequest);
-        otpService.sendOtp(signupRequest.getEmail());
-        return ResponseUtils.success();
+    @PostMapping("/signup")
+    public ResponseEntity<BaseResponse<SignupResponse>> signup(@RequestBody SignupRequest signupRequest) {
+        return ResponseUtils.success(authService.signup(signupRequest));
     }
 }
