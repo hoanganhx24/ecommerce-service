@@ -1,4 +1,4 @@
-package com.hoanganh24.notification.dto.request;
+package com.hoanganh24.common.event;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -9,7 +9,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class SendOtpRequest {
-    String email;
-    String otp;
+public class CommandPayload {
+    String type;
+    Object data;
 }
