@@ -1,8 +1,13 @@
 package com.hoanganh24.auth.controller;
 
+import com.hoanganh24.auth.dto.request.LoginRequest;
+import com.hoanganh24.auth.dto.request.LogoutRequest;
+import com.hoanganh24.auth.dto.request.RefreshTokenRequest;
 import com.hoanganh24.auth.dto.request.SignupRequest;
+import com.hoanganh24.auth.dto.response.AuthResponse;
 import com.hoanganh24.auth.dto.response.SignupResponse;
 import com.hoanganh24.auth.service.AuthService;
+import com.hoanganh24.auth.service.TokenService;
 import com.hoanganh24.common.dto.response.BaseResponse;
 import com.hoanganh24.common.util.ResponseUtils;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +22,26 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+    private final TokenService tokenService;
 
     @PostMapping("/signup")
     public ResponseEntity<BaseResponse<SignupResponse>> signup(@RequestBody SignupRequest signupRequest) {
         return ResponseUtils.success(authService.signup(signupRequest));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<BaseResponse<AuthResponse>> login(@RequestBody LoginRequest loginRequest) {
+        return ResponseUtils.success(authService.login(loginRequest));
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<BaseResponse<AuthResponse>> refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest) {
+        return ResponseUtils.success(tokenService.refreshToken(refreshTokenRequest));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<BaseResponse<Void>> logout(@RequestBody LogoutRequest logoutRequest) {
+        authService.logout(logoutRequest);
+        return ResponseUtils.success();
     }
 }

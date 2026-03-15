@@ -1,30 +1,51 @@
 package com.hoanganh24.auth.service.impl;
 
+import com.hoanganh24.auth.dto.request.RefreshTokenRequest;
+import com.hoanganh24.auth.dto.response.AuthResponse;
+import com.hoanganh24.auth.enums.TokenType;
+import com.hoanganh24.auth.exception.AuthenticationException;
+import com.hoanganh24.auth.model.InvalidateToken;
+import com.hoanganh24.auth.model.User;
+import com.hoanganh24.auth.repository.InvalidateTokenRepository;
+import com.hoanganh24.auth.repository.UserRepository;
 import com.hoanganh24.auth.service.TokenService;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.naming.AuthenticationException;
 import java.text.ParseException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class TokenServiceImpl implements TokenService {
+    @NonFinal
     @Value("${jwt.signerKey}")
     private String signerKey;
 
+    @NonFinal
     @Value("${jwt.valid-duration}")
     private long validDuration;
 
+    @NonFinal
     @Value("${jwt.refeshable-duration}")
     private long refreshableDuration;
 
+    private final UserRepository userRepository;
+    private final InvalidateTokenRepository invalidateTokenRepository;
+
     @Override
-    public SignedJWT verifyToken(String token) throws AuthenticationException {
+    public SignedJWT verifyToken(String token) {
         try {
             SignedJWT signedJWT = SignedJWT.parse(token);
             JWSVerifier verifier = new MACVerifier(signerKey.getBytes());
@@ -39,9 +60,9 @@ public class TokenServiceImpl implements TokenService {
                 throw new AuthenticationException("Expired JWT token");
             }
 
-//            if (invalidateTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
-//                throw  new AuthenticationException("Token has expired");
-//            }
+            if (invalidateTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+                throw  new AuthenticationException("Token has expired");
+            }
             return signedJWT;
         } catch (ParseException e) {
             throw new AuthenticationException("Invalid JWT token format");
@@ -49,4 +70,61 @@ public class TokenServiceImpl implements TokenService {
             throw new AuthenticationException("Error verifying JWT token");
         }
     }
+
+    @Override
+    public String generateToken(User user, TokenType tokenType) {
+        long expiration =switch (tokenType) {
+            case ACCESS -> validDuration;
+            case REFRESH -> refreshableDuration;
+        };
+        JWSHeader header = new JWSHeader(JWSAlgorithm.ES512);
+        JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                .subject(user.getEmail())
+                .issuer("e-commerce")
+                .issueTime(new Date())
+                .expirationTime(new Date(Instant.now()
+                        .plus( expiration, ChronoUnit.SECONDS).toEpochMilli()))
+                .claim("scope", (user.getRole() != null) ? user.getRole().toString() : "USER")
+                .claim("userId", user.getId())
+                .jwtID(UUID.randomUUID().toString())
+                .build();
+        Payload payload = new Payload(claimsSet.toJSONObject());
+        JWSObject jwsObject = new JWSObject(header, payload);
+        try {
+            jwsObject.sign(new MACSigner(signerKey.getBytes()));
+            return jwsObject.serialize();
+        } catch (JOSEException e) {
+            throw new RuntimeException("The code has an error");
+        }
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse refreshToken(RefreshTokenRequest request) {
+        try {
+            SignedJWT signed = verifyToken(request.getToken());
+            String email = signed.getJWTClaimsSet().getSubject();
+
+            User existingUser = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new AuthenticationException("Subject token invalid"));
+
+            invalidateTokenRepository.save(
+                    InvalidateToken.builder()
+                            .id(signed.getJWTClaimsSet().getJWTID())
+                            .expiryTime(signed.getJWTClaimsSet().getExpirationTime())
+                            .build()
+            );
+
+            return AuthResponse.builder()
+                    .accessToken(generateToken(existingUser, TokenType.REFRESH))
+                    .refreshToken(generateToken(existingUser, TokenType.REFRESH))
+                    .authenticated(true)
+                    .build();
+        } catch (AuthenticationException e) {
+            throw new AuthenticationException("Invalid JWT token");
+        } catch (ParseException e) {
+            throw new AuthenticationException("Invalid JWT token format");
+        }
+    }
+
 }

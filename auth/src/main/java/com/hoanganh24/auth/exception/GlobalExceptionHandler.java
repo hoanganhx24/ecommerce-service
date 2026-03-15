@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
                 .body(BaseResponse.of(HttpStatus.BAD_REQUEST.value(), "Dữ liệu khng hợp lệ", errors));
     }
 
-    @ExceptionHandler(AuthenticationException.class)
+    @ExceptionHandler(com.hoanganh24.auth.exception.AuthenticationException.class)
     public ResponseEntity<BaseResponse<Object>> handleAuthenticationException(AuthenticationException ex) {
         log.error("AuthenticationException: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
