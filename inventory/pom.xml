@@ -7,10 +7,10 @@
         <artifactId>e-commerce-service</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>product</artifactId>
+    <artifactId>inventory</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>product</name>
-    <description>product</description>
+    <name>inventory</name>
+    <description>inventory</description>
     <licenses>
         <license/>
     </licenses>
@@ -58,12 +58,6 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>com.hoanganh24</groupId>
-            <artifactId>common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 
     <build>
@@ -91,5 +85,6 @@
             <!-- Jib Plugin để build Docker image (optional) -->
         </plugins>
     </build>
+
 
 </project>

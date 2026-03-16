@@ -31,6 +31,7 @@
         <module>payment</module>
         <module>logging</module>
         <module>common</module>
+        <module>inventory</module>
     </modules>
 
     <properties>
