@@ -1,12 +1,11 @@
 package com.hoanganh24.auth.controller;
 
-import com.hoanganh24.auth.dto.request.LoginRequest;
-import com.hoanganh24.auth.dto.request.LogoutRequest;
-import com.hoanganh24.auth.dto.request.RefreshTokenRequest;
-import com.hoanganh24.auth.dto.request.SignupRequest;
+import com.hoanganh24.auth.dto.request.*;
 import com.hoanganh24.auth.dto.response.AuthResponse;
 import com.hoanganh24.auth.dto.response.SignupResponse;
+import com.hoanganh24.auth.dto.response.VerifyOtpResponse;
 import com.hoanganh24.auth.service.AuthService;
+import com.hoanganh24.auth.service.OtpService;
 import com.hoanganh24.auth.service.TokenService;
 import com.hoanganh24.common.dto.response.BaseResponse;
 import com.hoanganh24.common.util.ResponseUtils;
@@ -23,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class AuthController {
     private final AuthService authService;
     private final TokenService tokenService;
+    private final OtpService otpService;
 
     @PostMapping("/signup")
     public ResponseEntity<BaseResponse<SignupResponse>> signup(@RequestBody SignupRequest signupRequest) {
@@ -43,5 +43,10 @@ public class AuthController {
     public ResponseEntity<BaseResponse<Void>> logout(@RequestBody LogoutRequest logoutRequest) {
         authService.logout(logoutRequest);
         return ResponseUtils.success();
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<BaseResponse<VerifyOtpResponse>> verifyOtp(@RequestBody VerifyOtpRequest verifyOtpRequest) {
+        return ResponseUtils.success(otpService.verifyOtp(verifyOtpRequest));
     }
 }

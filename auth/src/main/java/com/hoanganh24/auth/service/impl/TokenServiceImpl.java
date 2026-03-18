@@ -77,7 +77,7 @@ public class TokenServiceImpl implements TokenService {
             case ACCESS -> validDuration;
             case REFRESH -> refreshableDuration;
         };
-        JWSHeader header = new JWSHeader(JWSAlgorithm.ES512);
+        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getEmail())
                 .issuer("e-commerce")
