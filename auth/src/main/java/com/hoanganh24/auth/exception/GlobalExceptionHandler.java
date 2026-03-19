@@ -52,7 +52,7 @@ public class GlobalExceptionHandler {
         });
         log.error("Validation Error: {}", errors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(BaseResponse.of(HttpStatus.BAD_REQUEST.value(), "Dữ liệu khng hợp lệ", errors));
+                .body(BaseResponse.of(HttpStatus.BAD_REQUEST.value(), "Dữ liệu không hợp lệ", errors));
     }
 
     @ExceptionHandler(com.hoanganh24.auth.exception.AuthenticationException.class)

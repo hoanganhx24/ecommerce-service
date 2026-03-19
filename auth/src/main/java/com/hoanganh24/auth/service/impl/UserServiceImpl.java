@@ -62,6 +62,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User không tồn tại với email: " + email));
+                .orElseThrow(() -> new com.hoanganh24.auth.exception.AuthenticationException("User not found with email: " + email));
     }
 }

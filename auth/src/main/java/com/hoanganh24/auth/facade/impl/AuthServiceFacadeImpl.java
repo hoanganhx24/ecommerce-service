@@ -25,7 +25,6 @@ public class AuthServiceFacadeImpl implements AuthServiceFacade {
 
     private final UserService userService;
     private final OtpService otpService;
-    private final UserRepository userRepository;
     private final TokenService tokenService;
     private final InvalidateTokenService invalidateTokenService;
     private final AuthService authService;
@@ -92,14 +91,13 @@ public class AuthServiceFacadeImpl implements AuthServiceFacade {
             SignedJWT signed = tokenService.verifyToken(request.getToken());
             String email = signed.getJWTClaimsSet().getSubject();
 
-            User existingUser = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new AuthenticationException("Subject token invalid"));
+            User existingUser = userService.findByEmail(email);
 
             invalidateTokenService.create(signed.getJWTClaimsSet().getJWTID(),
                     signed.getJWTClaimsSet().getExpirationTime());
 
             return AuthResponse.builder()
-                    .accessToken(tokenService.generateToken(existingUser, TokenType.REFRESH))
+                    .accessToken(tokenService.generateToken(existingUser, TokenType.ACCESS))
                     .refreshToken(tokenService.generateToken(existingUser, TokenType.REFRESH))
                     .authenticated(true)
                     .build();

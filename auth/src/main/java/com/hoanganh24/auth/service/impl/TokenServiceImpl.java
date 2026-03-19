@@ -91,7 +91,7 @@ public class TokenServiceImpl implements TokenService {
             jwsObject.sign(new MACSigner(signerKey.getBytes()));
             return jwsObject.serialize();
         } catch (JOSEException e) {
-            throw new RuntimeException("The code has an error");
+            throw new AuthenticationException("Failed to sign JWT token: " + e.getMessage());
         }
     }
 
