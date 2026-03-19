@@ -1,10 +1,8 @@
 package com.hoanganh24.auth.service.impl;
 
-import com.hoanganh24.auth.dto.request.RefreshTokenRequest;
-import com.hoanganh24.auth.dto.response.AuthResponse;
 import com.hoanganh24.auth.enums.TokenType;
 import com.hoanganh24.auth.exception.AuthenticationException;
-import com.hoanganh24.auth.model.InvalidateToken;
+
 import com.hoanganh24.auth.model.User;
 import com.hoanganh24.auth.repository.InvalidateTokenRepository;
 import com.hoanganh24.auth.repository.UserRepository;
@@ -14,7 +12,6 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
@@ -95,35 +92,6 @@ public class TokenServiceImpl implements TokenService {
             return jwsObject.serialize();
         } catch (JOSEException e) {
             throw new RuntimeException("The code has an error");
-        }
-    }
-
-    @Override
-    @Transactional
-    public AuthResponse refreshToken(RefreshTokenRequest request) {
-        try {
-            SignedJWT signed = verifyToken(request.getToken());
-            String email = signed.getJWTClaimsSet().getSubject();
-
-            User existingUser = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new AuthenticationException("Subject token invalid"));
-
-            invalidateTokenRepository.save(
-                    InvalidateToken.builder()
-                            .id(signed.getJWTClaimsSet().getJWTID())
-                            .expiryTime(signed.getJWTClaimsSet().getExpirationTime())
-                            .build()
-            );
-
-            return AuthResponse.builder()
-                    .accessToken(generateToken(existingUser, TokenType.REFRESH))
-                    .refreshToken(generateToken(existingUser, TokenType.REFRESH))
-                    .authenticated(true)
-                    .build();
-        } catch (AuthenticationException e) {
-            throw new AuthenticationException("Invalid JWT token");
-        } catch (ParseException e) {
-            throw new AuthenticationException("Invalid JWT token format");
         }
     }
 

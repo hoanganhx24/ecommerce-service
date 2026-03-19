@@ -11,5 +11,4 @@ import javax.naming.AuthenticationException;
 public interface TokenService {
     SignedJWT verifyToken(String token);
     String generateToken(User user, TokenType tokenType);
-    AuthResponse refreshToken(RefreshTokenRequest request);
 }

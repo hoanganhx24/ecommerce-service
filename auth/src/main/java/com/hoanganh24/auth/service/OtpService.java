@@ -5,5 +5,5 @@ import com.hoanganh24.auth.dto.response.VerifyOtpResponse;
 
 public interface OtpService {
     void sendOtp(String email);
-    VerifyOtpResponse verifyOtp(VerifyOtpRequest verifyOtpRequest);
+    boolean verifyOtp(VerifyOtpRequest verifyOtpRequest);
 }
