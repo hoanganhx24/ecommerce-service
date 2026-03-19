@@ -1,0 +1,33 @@
+spring:
+  config:
+    import: optional:file:./notification/.env[.properties]
+  application:
+    name: notification
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:blackonehitsll1@gmail.com}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+        debug: true
+    protocol: ${MAIL_PROTOCOL:smtp}
+  cloud:
+    stream:
+      default-binder: kafka
+      function:
+        definition: notificationConsume
+      bindings:
+        notificationConsume-in-0:
+          destination: notification-service-event
+          group: notification-service
+          content-type: application/json
+server:
+  port: 8082
+  servlet:
+    context-path: /api/v1/notification

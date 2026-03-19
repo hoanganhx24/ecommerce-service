@@ -1,12 +1,45 @@
 spring:
+  config:
+    import: optional:file:./auth/.env[.properties]
   application:
     name: auth
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/auth_db}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cloud:
+    stream:
+      default-binder: kafka
+      kafka:
+        binder:
+          brokers: localhost:9092
+          auto-create-topics: false
+      bindings:
+        notificationPublish-out-0:
+          destination: notification-service-event
+          content-type: application/json
 
 server:
   port: 8081
+  servlet:
+    context-path: /api/v1/auth
 
 #JWT
 jwt:
-  signerKey: ${JWT_SIGNER_KEY}
-  valid-duration: 3600
-  refeshable-duration: 172800
+  signerKey: ${JWT_SIGNERKEY}
+  valid-duration: ${JWT_VALID_DURATION:3600}
+  refeshable-duration: ${JWT_REFRESHABLE_DURATION:172800}
