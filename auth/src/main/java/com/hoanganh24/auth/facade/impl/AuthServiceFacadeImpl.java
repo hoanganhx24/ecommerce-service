@@ -7,10 +7,7 @@ import com.hoanganh24.auth.dto.response.VerifyOtpResponse;
 import com.hoanganh24.auth.enums.TokenType;
 import com.hoanganh24.auth.exception.AuthenticationException;
 import com.hoanganh24.auth.facade.AuthServiceFacade;
-import com.hoanganh24.auth.model.InvalidateToken;
 import com.hoanganh24.auth.model.User;
-import com.hoanganh24.auth.repository.InvalidateTokenRepository;
-import com.hoanganh24.auth.repository.UserRepository;
 import com.hoanganh24.auth.service.*;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +28,7 @@ public class AuthServiceFacadeImpl implements AuthServiceFacade {
 
     @Override
     public SignupResponse signup(SignupRequest signupRequest) {
-        userService.createUser(signupRequest.getEmail(), signupRequest.getPassword());
+        userService.createOrUpdateInActivatedUser(signupRequest.getEmail(), signupRequest.getPassword());
         try {
             // gửi OTP
             otpService.sendOtp(signupRequest.getEmail());
@@ -47,14 +44,15 @@ public class AuthServiceFacadeImpl implements AuthServiceFacade {
     @Override
     public VerifyOtpResponse verifyOtp(VerifyOtpRequest request) {
         if (otpService.verifyOtp(request)) {
-            User user = userService.findByEmail(request.getEmail());
+            User user = userService.activateUser(request.getEmail());
 
-            userService.activateUser(request.getEmail());
+            String accessToken = tokenService.generateToken(user, TokenType.ACCESS);
+            String refreshToken = tokenService.generateToken(user, TokenType.REFRESH);
 
             return VerifyOtpResponse
                     .builder()
-                    .token(tokenService.generateToken(user, TokenType.ACCESS))
-                    .refreshToken(tokenService.generateToken(user, TokenType.REFRESH))
+                    .token(accessToken)
+                    .refreshToken(refreshToken)
                     .verified(true)
                     .build();
         }
@@ -67,11 +65,7 @@ public class AuthServiceFacadeImpl implements AuthServiceFacade {
     @Override
     public AuthResponse login(LoginRequest loginRequest) {
         User user = authService.authenticate(loginRequest.getEmail(), loginRequest.getPassword());
-        return AuthResponse.builder()
-                .accessToken(tokenService.generateToken(user, TokenType.ACCESS))
-                .refreshToken(tokenService.generateToken(user, TokenType.REFRESH))
-                .authenticated(true)
-                .build();
+        return generateAuthResponse(user);
     }
 
     @Override
@@ -96,15 +90,20 @@ public class AuthServiceFacadeImpl implements AuthServiceFacade {
             invalidateTokenService.create(signed.getJWTClaimsSet().getJWTID(),
                     signed.getJWTClaimsSet().getExpirationTime());
 
-            return AuthResponse.builder()
-                    .accessToken(tokenService.generateToken(existingUser, TokenType.ACCESS))
-                    .refreshToken(tokenService.generateToken(existingUser, TokenType.REFRESH))
-                    .authenticated(true)
-                    .build();
+            return generateAuthResponse(existingUser);
         } catch (AuthenticationException e) {
             throw new AuthenticationException("Invalid JWT token");
         } catch (ParseException e) {
             throw new AuthenticationException("Invalid JWT token format");
         }
+    }
+
+    // Private methods
+    private AuthResponse generateAuthResponse(User user) {
+        return AuthResponse.builder()
+                .accessToken(tokenService.generateToken(user, TokenType.ACCESS))
+                .refreshToken(tokenService.generateToken(user, TokenType.REFRESH))
+                .authenticated(true)
+                .build();
     }
 }

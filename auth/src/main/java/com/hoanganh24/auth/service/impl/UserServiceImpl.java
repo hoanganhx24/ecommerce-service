@@ -10,8 +10,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -21,45 +19,47 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void createUser(String email, String password) {
-        Optional<User> existingUserOpt = userRepository.findByEmail(email);
-        if (existingUserOpt.isPresent()) {
-            User existingUser = existingUserOpt.get();
-            if (existingUser.getIsActive()) {
-                throw new ResourceExistedException(String.format("Tài khoản đã tồn tại và đang hoạt động với email: %s", email));
-            }
-            existingUser.setPassword(passwordEncoder.encode(password));
-            userRepository.save(existingUser);
-            return;
-        }
         String encodedPassword = passwordEncoder.encode(password);
-
         // Tạo user mới
-        User user = User.builder()
+        userRepository.save(User.builder()
                 .email(email)
                 .password(encodedPassword)
                 .isActive(false)
                 .role(Role.USER)
-                .build();
+                .build());
+    }
 
+    @Override
+    @Transactional
+    public void createOrUpdateInActivatedUser(String email, String password) {
+        User user = findByEmail(email);
+        if (user == null) {
+            createUser(email, password);
+        }
+
+        if (user.getIsActive()) {
+            throw new ResourceExistedException(String.format("User với email %s đã kích hoạt", email));
+        }
+        user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
     }
 
     @Override
     @Transactional
-    public void activateUser(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceExistedException(String.format("User với email %s không tồn tại", email)));
+    public User activateUser(String email) {
+        User user = findByEmail(email);
         user.setIsActive(true);
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
     @Override
     @Transactional
-    public void updatePassword(String email, String newPassword) {
-
+    public User updatePassword(String email, String newPassword) {
+        return null;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new com.hoanganh24.auth.exception.AuthenticationException("User not found with email: " + email));
