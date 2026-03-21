@@ -33,14 +33,14 @@ public class BrandServiceImpl implements BrandService {
     @Override
     @Transactional(readOnly = true)
     public BrandResponse getByName(String name) {
-        return brandMapper.toResponse(brandRepository.findByName(name));
+        Brand brand = findByNameOrThrow(name);
+        return brandMapper.toResponse(brand);
     }
 
     @Override
     @Transactional
     public BrandResponse update(String id, BrandRequest request) {
-        Brand brand = brandRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(String.format("Brand with id %s not found", id)));
+        Brand brand = findByIdOrThrow(id);
         if (request.getName() != null && !request.getName().equals(brand.getName())) {
             validateBrandName(request.getName());
             brand.setName(request.getName());
@@ -67,5 +67,15 @@ public class BrandServiceImpl implements BrandService {
                     String.format("Brand dã tồn tại với tên: %s", name)
             );
         }
+    }
+
+    private Brand findByIdOrThrow(String id) {
+        return brandRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(String.format("Brand with id %s not found", id)));
+    }
+
+    private Brand findByNameOrThrow(String name) {
+        return brandRepository.findByName(name)
+                .orElseThrow(() -> new NotFoundException(String.format("Brand with name %s not found", name)));
     }
 }
