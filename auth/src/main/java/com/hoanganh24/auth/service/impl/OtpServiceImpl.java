@@ -9,6 +9,7 @@ import com.hoanganh24.common.event.CommandPayload;
 import com.hoanganh24.common.event.OtpEventPayload;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.Random;
@@ -20,6 +21,7 @@ public class OtpServiceImpl implements OtpService {
     private final EventPublisher eventPublisher;
 
     @Override
+    @Transactional
     public void sendOtp(String email) {
         String otp = generateOtp();
         String key = "auth:otp:signup:" + email;

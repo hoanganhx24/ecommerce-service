@@ -3,11 +3,11 @@ package com.hoanganh24.auth.facade.impl;
 import com.hoanganh24.auth.dto.request.*;
 import com.hoanganh24.auth.dto.response.AuthResponse;
 import com.hoanganh24.auth.dto.response.SignupResponse;
+import com.hoanganh24.auth.dto.response.UserResponse;
 import com.hoanganh24.auth.dto.response.VerifyOtpResponse;
 import com.hoanganh24.auth.enums.TokenType;
 import com.hoanganh24.auth.exception.AuthenticationException;
 import com.hoanganh24.auth.facade.AuthServiceFacade;
-import com.hoanganh24.auth.model.User;
 import com.hoanganh24.auth.service.*;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +44,7 @@ public class AuthServiceFacadeImpl implements AuthServiceFacade {
     @Override
     public VerifyOtpResponse verifyOtp(VerifyOtpRequest request) {
         if (otpService.verifyOtp(request)) {
-            User user = userService.activateUser(request.getEmail());
+            UserResponse user = userService.activateUser(request.getEmail());
 
             String accessToken = tokenService.generateToken(user, TokenType.ACCESS);
             String refreshToken = tokenService.generateToken(user, TokenType.REFRESH);
@@ -64,7 +64,7 @@ public class AuthServiceFacadeImpl implements AuthServiceFacade {
 
     @Override
     public AuthResponse login(LoginRequest loginRequest) {
-        User user = authService.authenticate(loginRequest.getEmail(), loginRequest.getPassword());
+        UserResponse user = authService.authenticate(loginRequest.getEmail(), loginRequest.getPassword());
         return generateAuthResponse(user);
     }
 
@@ -85,7 +85,7 @@ public class AuthServiceFacadeImpl implements AuthServiceFacade {
             SignedJWT signed = tokenService.verifyToken(request.getToken());
             String email = signed.getJWTClaimsSet().getSubject();
 
-            User existingUser = userService.findByEmail(email);
+            UserResponse existingUser = userService.findByEmail(email);
 
             invalidateTokenService.create(signed.getJWTClaimsSet().getJWTID(),
                     signed.getJWTClaimsSet().getExpirationTime());
@@ -99,7 +99,7 @@ public class AuthServiceFacadeImpl implements AuthServiceFacade {
     }
 
     // Private methods
-    private AuthResponse generateAuthResponse(User user) {
+    private AuthResponse generateAuthResponse(UserResponse user) {
         return AuthResponse.builder()
                 .accessToken(tokenService.generateToken(user, TokenType.ACCESS))
                 .refreshToken(tokenService.generateToken(user, TokenType.REFRESH))

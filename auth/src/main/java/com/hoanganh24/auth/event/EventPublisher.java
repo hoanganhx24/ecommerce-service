@@ -12,7 +12,7 @@ public class EventPublisher {
     @Autowired
     private StreamBridge streamBridge;
 
-    public boolean notificationPublish(CommandPayload payload) {
-        return streamBridge.send(NOTI_EVENT_BINDING_NAME, payload);
+    public void notificationPublish(CommandPayload payload) {
+        streamBridge.send(NOTI_EVENT_BINDING_NAME, payload);
     }
 }

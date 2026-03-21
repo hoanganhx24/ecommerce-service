@@ -4,4 +4,5 @@ import java.util.Date;
 
 public interface InvalidateTokenService {
     void create(String id, Date expiration);
+    boolean existById(String id);
 }

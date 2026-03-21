@@ -1,23 +1,28 @@
 package com.hoanganh24.auth.service.impl;
 
+import com.hoanganh24.auth.dto.response.UserResponse;
 import com.hoanganh24.auth.exception.AuthenticationException;
+import com.hoanganh24.auth.mapper.UserMapper;
 import com.hoanganh24.auth.model.User;
 import com.hoanganh24.auth.repository.UserRepository;
 import com.hoanganh24.auth.service.AuthService;
-import com.hoanganh24.auth.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     @Override
-    public User authenticate(String email, String password) {
-        User user = userService.findByEmail(email);
+    @Transactional(readOnly = true)
+    public UserResponse authenticate(String email, String password) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthenticationException("Invalid email"));
 
         if (!user.getIsActive()) {
             throw new AuthenticationException("Account is not active");
@@ -27,7 +32,7 @@ public class AuthServiceImpl implements AuthService {
             throw new AuthenticationException("Invalid email or password");
         }
 
-        return user;
+        return userMapper.toUserResponse(user);
     }
 
     private boolean matchesPassword(String rawPassword, String encodedPassword) {

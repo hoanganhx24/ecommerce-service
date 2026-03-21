@@ -22,4 +22,9 @@ public class InvalidateTokenServiceImpl implements InvalidateTokenService{
                         .expiryTime(expiration)
                         .build());
     }
+
+    @Override
+    public boolean existById(String id) {
+        return invalidateTokenRepository.existsById(id);
+    }
 }

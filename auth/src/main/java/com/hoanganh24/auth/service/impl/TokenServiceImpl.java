@@ -1,11 +1,10 @@
 package com.hoanganh24.auth.service.impl;
 
+import com.hoanganh24.auth.dto.response.UserResponse;
 import com.hoanganh24.auth.enums.TokenType;
 import com.hoanganh24.auth.exception.AuthenticationException;
 
-import com.hoanganh24.auth.model.User;
-import com.hoanganh24.auth.repository.InvalidateTokenRepository;
-import com.hoanganh24.auth.repository.UserRepository;
+import com.hoanganh24.auth.service.InvalidateTokenService;
 import com.hoanganh24.auth.service.TokenService;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -16,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -38,10 +38,10 @@ public class TokenServiceImpl implements TokenService {
     @Value("${jwt.refeshable-duration}")
     private long refreshableDuration;
 
-    private final UserRepository userRepository;
-    private final InvalidateTokenRepository invalidateTokenRepository;
+    private final InvalidateTokenService invalidateTokenService;
 
     @Override
+    @Transactional(readOnly = true)
     public SignedJWT verifyToken(String token) {
         try {
             SignedJWT signedJWT = SignedJWT.parse(token);
@@ -57,7 +57,7 @@ public class TokenServiceImpl implements TokenService {
                 throw new AuthenticationException("Expired JWT token");
             }
 
-            if (invalidateTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+            if (invalidateTokenService.existById(signedJWT.getJWTClaimsSet().getJWTID())) {
                 throw  new AuthenticationException("Token has expired");
             }
             return signedJWT;
@@ -69,7 +69,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public String generateToken(User user, TokenType tokenType) {
+    public String generateToken(UserResponse user, TokenType tokenType) {
         long expiration =switch (tokenType) {
             case ACCESS -> validDuration;
             case REFRESH -> refreshableDuration;
@@ -91,7 +91,7 @@ public class TokenServiceImpl implements TokenService {
             jwsObject.sign(new MACSigner(signerKey.getBytes()));
             return jwsObject.serialize();
         } catch (JOSEException e) {
-            throw new AuthenticationException("Failed to sign JWT token: " + e.getMessage());
+            throw new AuthenticationException(String.format("Failed to sign JWT token: %s", e.getMessage()));
         }
     }
 

@@ -1,9 +1,12 @@
 package com.hoanganh24.auth.service.impl;
 
+import com.hoanganh24.auth.dto.response.UserResponse;
 import com.hoanganh24.auth.enums.Role;
+import com.hoanganh24.auth.mapper.UserMapper;
 import com.hoanganh24.auth.model.User;
 import com.hoanganh24.auth.repository.UserRepository;
 import com.hoanganh24.auth.service.UserService;
+import com.hoanganh24.common.exception.NotFoundException;
 import com.hoanganh24.common.exception.ResourceExistedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     @Override
     @Transactional
@@ -32,9 +36,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void createOrUpdateInActivatedUser(String email, String password) {
-        User user = findByEmail(email);
+        User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
             createUser(email, password);
+            return;
         }
 
         if (user.getIsActive()) {
@@ -46,22 +51,28 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User activateUser(String email) {
-        User user = findByEmail(email);
+    public UserResponse activateUser(String email) {
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            throw new NotFoundException(String.format("User not found with email: %s", email));
+        }
         user.setIsActive(true);
-        return userRepository.save(user);
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 
     @Override
     @Transactional
-    public User updatePassword(String email, String newPassword) {
+    public UserResponse updatePassword(String email, String newPassword) {
         return null;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email)
+    public UserResponse findByEmail(String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new com.hoanganh24.auth.exception.AuthenticationException("User not found with email: " + email));
+        return  userMapper.toUserResponse(user);
     }
+
+
 }
